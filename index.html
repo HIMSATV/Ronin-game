@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>애완동물 번역기</title>
+  <style>
+    :root {
+      --bg1: #121212;
+      --bg2: #1d1b2f;
+      --panel: rgba(255,255,255,0.08);
+      --panel-strong: rgba(255,255,255,0.14);
+      --line: rgba(255,255,255,0.12);
+      --text: #f6f1ea;
+      --muted: #cdbfae;
+      --accent: #ffd36f;
+      --accent-2: #ff9d66;
+      --danger: #ff6767;
+      --ok: #85f09d;
+      --shadow: 0 18px 50px rgba(0,0,0,0.35);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top, rgba(255,198,92,0.12), transparent 30%),
+        linear-gradient(180deg, var(--bg2), var(--bg1));
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+      min-height: 100%;
+    }
+    body {
+      padding: env(safe-area-inset-top) 14px calc(18px + env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: center;
+    }
+    .app {
+      width: 100%;
+      max-width: 760px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.05));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    .header {
+      padding: 22px 18px 14px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(255,211,111,0.12);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    h1 {
+      margin: 14px 0 8px;
+      font-size: clamp(28px, 5vw, 42px);
+      line-height: 1.05;
+    }
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+    .controls {
+      padding: 0 18px 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    button, select {
+      appearance: none;
+      border: 0;
+      border-radius: 16px;
+      padding: 15px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      width: 100%;
+    }
+    button {
+      cursor: pointer;
+      color: #1a1408;
+      background: linear-gradient(180deg, #ffe18e, #ffbf5f);
+      box-shadow: 0 10px 24px rgba(255,191,95,0.22);
+    }
+    button.secondary {
+      color: var(--text);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    button.danger {
+      color: white;
+      background: linear-gradient(180deg, #ff8e8e, #ff5d5d);
+      box-shadow: 0 10px 24px rgba(255,93,93,0.24);
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .video-wrap {
+      position: relative;
+      margin: 0 18px 18px;
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #070707;
+      aspect-ratio: 9 / 16;
+      max-height: 72svh;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
+      display: block;
+    }
+    .pillbar {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .pill {
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.42);
+      color: #fff;
+      font-weight: 800;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(8px);
+    }
+    .rec-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #ff5757;
+      margin-right: 6px;
+      box-shadow: 0 0 10px rgba(255,87,87,0.9);
+    }
+    .bubble-area {
+      padding: 0 18px 18px;
+    }
+    .bubble {
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,245,214,0.98), rgba(255,234,191,0.97));
+      color: #2f2110;
+      padding: 18px 18px 16px;
+      position: relative;
+      min-height: 88px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.18);
+    }
+    .bubble::after {
+      content: "";
+      position: absolute;
+      left: 26px;
+      bottom: -12px;
+      width: 22px;
+      height: 22px;
+      background: #ffe9bb;
+      transform: rotate(45deg);
+      border-radius: 4px;
+    }
+    .bubble-label {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      color: #8d641d;
+      margin-bottom: 8px;
+    }
+    .bubble-text {
+      font-size: clamp(20px, 4vw, 28px);
+      line-height: 1.35;
+      font-weight: 900;
+    }
+    .hint {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .footer {
+      padding: 10px 4px 0;
+      color: rgba(255,255,255,0.52);
+      text-align: center;
+      font-size: 12px;
+    }
+    .status-ok { color: var(--ok); }
+    .status-err { color: #ffb1b1; }
+    .select-wrap {
+      padding: 0 18px 12px;
+    }
+    select {
+      color: var(--text);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--line);
+      font-weight: 800;
+    }
+    .recording-glow {
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 0 3px rgba(255,88,88,0.92), inset 0 0 60px rgba(255,88,88,0.16);
+      opacity: 0;
+      transition: opacity .2s ease;
+      pointer-events: none;
+    }
+    .recording .recording-glow { opacity: 1; }
+    @media (max-width: 520px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+      .video-wrap {
+        aspect-ratio: 3 / 4;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="card">
+      <div class="header">
+        <div class="eyebrow">🐾 장난감 감성 웹앱</div>
+        <h1>애완동물 번역기</h1>
+        <p class="sub">카메라를 켜고 짧게 영상을 찍으면, 녹화가 끝난 뒤 아래 말풍선에 반려동물이 하는 말처럼 랜덤 문장이 나옵니다.</p>
+      </div>
+
+      <div class="select-wrap">
+        <select id="petType" aria-label="반려동물 종류 선택">
+          <option value="dog">강아지 모드</option>
+          <option value="cat">고양이 모드</option>
+          <option value="all">랜덤 모드</option>
+        </select>
+      </div>
+
+      <div class="controls">
+        <button id="startCameraBtn">카메라 켜기</button>
+        <button id="recordBtn" class="secondary" disabled>녹화 시작</button>
+      </div>
+
+      <div id="videoWrap" class="video-wrap">
+        <video id="preview" playsinline autoplay muted></video>
+        <div class="pillbar">
+          <div class="pill" id="modeBadge">대기 중</div>
+          <div class="pill" id="timerBadge">00:00</div>
+        </div>
+        <div class="recording-glow"></div>
+      </div>
+
+      <div class="bubble-area">
+        <div class="bubble">
+          <div class="bubble-label">번역 결과</div>
+          <div class="bubble-text" id="resultText">“나를 비추고 녹화를 끝내면 내가 말해줄게!”</div>
+        </div>
+        <div class="hint" id="statusText">카메라를 켜면 준비 완료입니다. GitHub Pages에 올리면 휴대폰에서 바로 열 수 있습니다.</div>
+      </div>
+    </section>
+    <div class="footer">Made for GitHub Pages · 단일 파일 배포용</div>
+  </main>
+
+  <script>
+    const phrases = {
+      dog: [
+        "간식 담당자님, 지금이 바로 그 시간입니다.",
+        "산책 각인데 왜 아직 소파에 계시죠?",
+        "저는 착한 강아지였으니 칭찬 두 번 부탁드립니다.",
+        "지금 카메라보다 당신 손에 든 간식이 더 중요합니다.",
+        "방금 꼬리를 흔든 건 우연이 아니라 요구입니다.",
+        "저 문 열리면 바로 출동 가능합니다.",
+        "저는 지금 놀 준비가 완료됐습니다.",
+        "좋아합니다. 아주 많이요. 특히 간식을요.",
+        "나 오늘 귀여움이 최고치라서 기록 남겨야 합니다.",
+        "쓰다듬기 30초 연장 요청합니다."
+      ],
+      cat: [
+        "좋습니다. 당신은 오늘도 저를 잘 모셨습니다.",
+        "지금은 만져도 되지만 너무 길면 안 됩니다.",
+        "간식은 필요하고 자존심도 필요합니다.",
+        "제가 부른 게 아니라 당신이 제 분위기를 읽은 겁니다.",
+        "창밖을 봤더니 세상이 아직 제 마음에 안 듭니다.",
+        "지금 졸리지만 간식 소리에는 참여 가능합니다.",
+        "카메라는 괜찮습니다. 플래시는 마음에 안 듭니다.",
+        "오늘의 일정은 잠, 식사, 당신 감시입니다.",
+        "한 번 더 부르면 갈 수도 있고 안 갈 수도 있습니다.",
+        "집사는 잘하고 있습니다. 계속 그렇게 하세요."
+      ],
+      all: [
+        "지금 저는 아주 중요한 반려동물 업무 중입니다.",
+        "귀여운 모습은 서비스가 아니라 본능입니다.",
+        "당신이 보고 있는 건 사랑스러움의 정수입니다.",
+        "오늘 컨디션은 좋고 관심은 더 필요합니다.",
+        "방금 표정은 우연이 아니라 메시지였습니다.",
+        "지금 이 장면, 저장할 가치가 충분합니다.",
+        "말은 못 해도 요구사항은 분명합니다.",
+        "저를 더 자주 찍어도 괜찮습니다. 아주 괜찮습니다."
+      ]
+    };
+
+    const startCameraBtn = document.getElementById('startCameraBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const preview = document.getElementById('preview');
+    const resultText = document.getElementById('resultText');
+    const statusText = document.getElementById('statusText');
+    const petType = document.getElementById('petType');
+    const modeBadge = document.getElementById('modeBadge');
+    const timerBadge = document.getElementById('timerBadge');
+    const videoWrap = document.getElementById('videoWrap');
+
+    let stream = null;
+    let mediaRecorder = null;
+    let chunks = [];
+    let isRecording = false;
+    let timerId = null;
+    let recordStart = 0;
+
+    function setStatus(text, type = 'ok') {
+      statusText.textContent = text;
+      statusText.className = 'hint ' + (type === 'ok' ? 'status-ok' : 'status-err');
+    }
+
+    function pickRandom(list) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function getPhrase() {
+      const mode = petType.value;
+      if (mode === 'dog') return pickRandom(phrases.dog);
+      if (mode === 'cat') return pickRandom(phrases.cat);
+      return pickRandom([...phrases.all, ...phrases.dog, ...phrases.cat]);
+    }
+
+    function speak(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'ko-KR';
+      utter.rate = 1;
+      utter.pitch = 1.1;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function formatTime(ms) {
+      const total = Math.floor(ms / 1000);
+      const mm = String(Math.floor(total / 60)).padStart(2, '0');
+      const ss = String(total % 60).padStart(2, '0');
+      return `${mm}:${ss}`;
+    }
+
+    function startTimer() {
+      recordStart = Date.now();
+      timerBadge.textContent = '00:00';
+      timerId = setInterval(() => {
+        timerBadge.textContent = formatTime(Date.now() - recordStart);
+      }, 200);
+    }
+
+    function stopTimer() {
+      clearInterval(timerId);
+      timerId = null;
+      timerBadge.textContent = '00:00';
+    }
+
+    async function startCamera() {
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        setStatus('카메라는 HTTPS 주소에서 여는 것이 가장 안정적입니다. GitHub Pages 주소로 접속해 주세요.', 'err');
+      }
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: true
+        });
+        preview.srcObject = stream;
+        recordBtn.disabled = false;
+        startCameraBtn.disabled = true;
+        modeBadge.textContent = '촬영 준비 완료';
+        setStatus('카메라가 켜졌습니다. 녹화 시작 버튼을 눌러 보세요.');
+      } catch (err) {
+        console.error(err);
+        setStatus('카메라 또는 마이크 권한을 허용해 주세요. 아이폰에서는 Pages 주소로 열어야 할 수 있습니다.', 'err');
+      }
+    }
+
+    function createRecorder() {
+      let options = {};
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) {
+        options.mimeType = 'video/webm;codecs=vp9,opus';
+      } else if (window.MediaRecorder && MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
+        options.mimeType = 'video/webm;codecs=vp8,opus';
+      } else if (window.MediaRecorder && MediaRecorder.isTypeSupported('video/webm')) {
+        options.mimeType = 'video/webm';
+      }
+      return new MediaRecorder(stream, options);
+    }
+
+    function startRecording() {
+      chunks = [];
+      mediaRecorder = createRecorder();
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) chunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const phrase = getPhrase();
+        resultText.textContent = `“${phrase}”`;
+        setStatus('녹화가 끝났습니다. 아래 문장이 랜덤으로 생성되었습니다.');
+        speak(phrase);
+      };
+
+      mediaRecorder.start();
+      isRecording = true;
+      videoWrap.classList.add('recording');
+      modeBadge.innerHTML = '<span class="rec-dot"></span>녹화 중';
+      recordBtn.textContent = '녹화 종료';
+      recordBtn.classList.remove('secondary');
+      recordBtn.classList.add('danger');
+      startTimer();
+      setStatus('녹화 중입니다. 원하는 순간에 종료를 누르세요.');
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      isRecording = false;
+      videoWrap.classList.remove('recording');
+      modeBadge.textContent = '촬영 준비 완료';
+      recordBtn.textContent = '녹화 시작';
+      recordBtn.classList.remove('danger');
+      recordBtn.classList.add('secondary');
+      stopTimer();
+    }
+
+    startCameraBtn.addEventListener('click', startCamera);
+
+    recordBtn.addEventListener('click', () => {
+      if (!stream) {
+        setStatus('먼저 카메라를 켜 주세요.', 'err');
+        return;
+      }
+      if (!window.MediaRecorder) {
+        setStatus('이 브라우저는 녹화 기능을 지원하지 않습니다.', 'err');
+        return;
+      }
+      if (!isRecording) startRecording();
+      else stopRecording();
+    });
+
+    petType.addEventListener('change', () => {
+      const names = {
+        dog: '강아지 모드',
+        cat: '고양이 모드',
+        all: '랜덤 모드'
+      };
+      setStatus(`${names[petType.value]}로 바뀌었습니다.`);
+    });
+  </script>
+</body>
+</html>
